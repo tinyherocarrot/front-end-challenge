@@ -5,10 +5,14 @@ import New from './components/new';
 import Edit from './components/edit';
 import * as serviceWorker from './serviceWorker';
 
+import FormStore from "./store/FormStore"
+const NewFormStore = new FormStore();
+const EditFormStore = new FormStore();
+
 const App = () => (
   <div className="app-container">
-    <New />
-    <Edit />
+    <New store={NewFormStore}/>
+    <Edit store={EditFormStore}/>
   </div>
 );
 

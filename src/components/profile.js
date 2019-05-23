@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './profile.css';
 
+
+// Mobx
+import { action, decorate } from "mobx"
+import { observer } from "mobx-react"
+
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -145,4 +150,7 @@ Profile.propTypes = {
   name: PropTypes.string.isRequired
 }
 
-export default Profile;
+decorate(Profile, {
+})
+
+export default observer(Profile);

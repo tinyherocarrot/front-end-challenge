@@ -1,7 +1,7 @@
 import Profile from './profile';
 import React from 'react';
 
-export default () => (
+export default ({ ...props }) => (
   <Profile
     name="Edit profile"
     profile={{
@@ -10,5 +10,6 @@ export default () => (
       email: "dylan@guidebook.com",
       gender: "male"
     }}
+    { ...props }
   />
 );
