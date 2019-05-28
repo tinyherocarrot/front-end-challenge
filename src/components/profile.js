@@ -1,144 +1,162 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import './profile.css';
-
+import React, { Component } from "react"
+import PropTypes from "prop-types"
+import "./profile.css"
 
 // Mobx
 import { action, decorate } from "mobx"
 import { observer } from "mobx-react"
 
 function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
 class Profile extends Component {
-  constructor() {
-    super();
-
-    this.handleFormSubmit = this.handleFormSubmit.bind(this);
-    this.formMessageRef = React.createRef();
-  }
-
-  removeInvalidClasses(requiredFields) {
-    requiredFields.forEach((element) => {
-      element.classList.remove('profile-form__field--invalid');
-    });
-
-    this.formMessageRef.current.innerHTML = '';
-    this.formMessageRef.current.classList.remove('profile-form__message--invalid');
-  }
-
-  addInvalidClassesAndValidationMessage(emptyFields) {
-    const emptyFieldNames = emptyFields.map((element) => element.name);
-
-    this.formMessageRef.current.classList.add('profile-form__message--invalid');
-    this.formMessageRef.current.innerHTML = capitalizeFirstLetter(`${emptyFieldNames.join(', ')} can not be blank`);
-  }
-
-  showFormSuccess() {
-    this.formMessageRef.current.innerHTML = 'Form submitted!';
-  }
-
-  handleFormSubmit(event) {
-    event.preventDefault();
-
-    const requiredFields = [
-      event.target.name,
-      event.target.gender,
-      event.target.email,
-      event.target.phone
-    ];
-
-    const emptyFields = requiredFields.filter((element) => (
-      !Boolean(element.value)
-    ));
-
-    this.removeInvalidClasses(requiredFields);
-
-    if (emptyFields.length) {
-      this.addInvalidClassesAndValidationMessage(emptyFields);
-
-      emptyFields.forEach((element) => {
-        element.classList.add('profile-form__field--invalid');
-      });
-
-    } else {
-      this.showFormSuccess();
-
-      console.log({
-        name: event.target.name.value,
-        gender: event.target.gender.value,
-        email: event.target.email.value,
-        phone: event.target.phone.value
-      });
+  componentDidMount() {
+    const {
+      store: { profile },
+      profile: defaultProfile
+    } = this.props
+    if (defaultProfile) {
+      Object.keys(defaultProfile).forEach(field => {
+        profile[field].value = defaultProfile[field]
+      })
     }
+  }
 
+  handleInputChange = event => {
+    const {
+      target: { name, value }
+    } = event
+    const {
+      store: { profile }
+    } = this.props
+
+    profile[name].value = value.trim()
+  }
+
+  handleFormSubmit = event => {
+    event.preventDefault()
+
+    const requiredFields = ["name", "gender", "email", "phone"]
+
+    const {
+      store: { profile, emptyFields, message }
+    } = this.props
+
+    requiredFields.forEach(field => {
+      const isValid = !emptyFields.includes(field)
+      profile[field].valid = isValid
+    })
+
+    if (emptyFields.length !== 0) {
+      message.text = `${capitalizeFirstLetter(
+        emptyFields.join(", ")
+      )} can not be blank`
+      message.status = "error"
+    } else {
+      message.text = `Form submitted!`
+      message.status = "success"
+      console.log({
+        name: profile.name.value,
+        gender: profile.gender.value,
+        email: profile.email.value,
+        phone: profile.phone.value
+      })
+    }
   }
 
   render() {
+    const {
+      store: { profile, message },
+      name
+    } = this.props
     return (
       <div className="app">
-        <h1>{this.props.name}</h1>
+        <h1>{name}</h1>
         <form onSubmit={this.handleFormSubmit}>
           <label className="profile-form__row">
             Name:
-            <input
-              defaultValue={this.props.profile.name}
-              className="profile-form__field" name="name" type="text"
+            <ControlledInput
+              valid={profile.name.valid}
+              value={profile.name.value}
+              name="name"
+              type="text"
+              onChange={this.handleInputChange}
             />
           </label>
           <label className="profile-form__row">
             Gender:
-            <select
-              defaultValue={this.props.profile.gender}
-              className="profile-form__field profile-form__select" name="gender"
-            >
+            <ControlledSelect
+              valid={profile.gender.valid}
+              value={profile.gender.value}
+              name="gender"
+              onChange={this.handleInputChange}>
               <option value="unspecified">Unspecified</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
-            </select>
+            </ControlledSelect>
           </label>
           <label className="profile-form__row">
             Email:
-            <input
-              defaultValue={this.props.profile.email}
-              className="profile-form__field"
+            <ControlledInput
+              valid={profile.email.valid}
+              value={profile.email.value}
               name="email"
               type="text"
+              onChange={this.handleInputChange}
             />
           </label>
           <label className="profile-form__row">
             Phone:
-            <input
-              defaultValue={this.props.profile.phone}
-              className="profile-form__field"
+            <ControlledInput
+              valid={profile.phone.valid}
+              value={profile.phone.value}
               name="phone"
               type="text"
+              onChange={this.handleInputChange}
             />
           </label>
           <div className="profile-form__row">
-            <input type="submit" value="Save" />
+            <input
+              type="submit"
+              value="Save"
+              onClick={e => this.handleFormSubmit(e)}
+            />
           </div>
           <div className="profile-form__row">
             <span
-              ref={this.formMessageRef}
-              className="profile-form__message"
-            />
+              className={`profile-form__message ${
+                message.status === "error"
+                  ? "profile-form__message--invalid"
+                  : ""
+              }`}>
+              {message.text}
+            </span>
           </div>
         </form>
       </div>
-    );
+    )
   }
 }
 
-Profile.defaultProps = {
-  profile: {
-    name: '',
-    gender: '',
-    email: '',
-    phone: ''
-  }
-}
+const ControlledInput = ({ touched, valid, ...props }) => (
+  <input
+    className={`profile-form__field ${
+      !valid ? "profile-form__field--invalid" : ""
+    }`}
+    {...props}
+  />
+)
+
+const ControlledSelect = ({ touched, valid, children, ...props }) => (
+  <select
+    className={`profile-form__field profile-form__select ${
+      !valid ? "profile-form__field--invalid" : ""
+    }`}
+    {...props}>
+    {children}
+  </select>
+)
 
 Profile.propTypes = {
   profile: PropTypes.shape({
@@ -151,6 +169,8 @@ Profile.propTypes = {
 }
 
 decorate(Profile, {
+  handleInputChange: action,
+  handleFormSubmit: action
 })
 
-export default observer(Profile);
+export default observer(Profile)

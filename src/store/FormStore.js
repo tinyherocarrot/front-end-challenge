@@ -1,25 +1,28 @@
-import { observable, computed, autorun, decorate } from "mobx";
+import { observable, computed, decorate } from "mobx"
 
-export default class FormStore {
+class FormStore {
+  message = {
+    text: "",
+    status: ""
+  }
   profile = {
-    name: "",
-    gender: "",
-    email: "",
-    password: ""
+    name: { value: "", valid: true },
+    gender: { value: "", valid: true },
+    email: { value: "", valid: true },
+    phone: { value: "", valid: true }
   }
 
-  constructor() {
-    autorun(() => console.log(this.profile))
+  get emptyFields() {
+    return Object.keys(this.profile).filter(
+      field => this.profile[field].value.length === 0
+    )
   }
-  
-  get getEmptyFields() {
-    const emptyFields = this.profile.keys().filter(field => this.profile[field] === "");
-    return emptyFields || null;
-  } 
-
 }
 
 decorate(FormStore, {
+  message: observable,
   profile: observable,
-  getEmptyFields: computed
-});
+  emptyFields: computed
+})
+
+export default FormStore
