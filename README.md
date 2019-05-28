@@ -1,43 +1,46 @@
-# Front end take home challenge
+# Front End Challenge
 
-1. [Overview](#overview)
-2. [How to work on this challenge](#how-to-work-on-this-challenge)
-2. [Time](#time)
-3. [Current code](#current-code)
-4. [Task](#task)
+### Step 1 Setup MobX Store
 
-## Overview
+- **Motivation**: Introduce MobX state management for easier form control.
+- Installed `mobx` and `mobx-react`
+- Created `/store`, `FormStore.js`.
+- Imported at `index.js`, initialized, and passed to New and Edit.
+- Edited `New` and `Edit` components to pass down the store to `Profile` component.
 
-The objective of this challenge is to give your interviewer a glimpse into your experience with React and to present you with a common code reorganization problem.
+### Step 2 Convert to Controlled Inputs
 
-## How to work on this challenge
+- **Motivation**: Ability to do client side feedback/validation. Also, input's onChange can be debounced for performance.
+- Added a `value` prop to each input element, set to `store.profile.<field>`
+- Deleted `defaultValue` prop on each input.
+- Added new `handleInputChange` handler to each input.
+- Pass new `handleFormSubmit` method to the save button, remove old one from form element.
 
-1. Run `git clone https://github.com/Guidebook/front-end-challenge`
-2. Modify the code locally
-3. Send this to the hiring manager either as a link to a Github repo hosted on your account or as a zip file with the repo contents.
+### Step 3 Rewrite Feedback/Validation logic
 
-## Time
+- **Motivation**: Remove use of refs, ie. in the feedback message. 
+- Rewrote `handleFormSubmit`. New `handleFormSubmit` checks `requiredFields` array against computed `emptyFields` array from the FormStore. If matches are found, the field's `valid` property is changed to `false` in the `FormStore`. This causes the corresponding input to style with a red border. A message is joined from `emptyFields` array. Else show "Form Submitted!"
+- Wrote method for checking for empty fields as a getter in `FormStore`
+- Kept the requiredFields array. Makes it easy to later turn that into a prop to be passed into Profile.js.
 
-We have given you a task that will take you at least an hour. Although working on this challenge for longer than an hour is fine, we respect your time and will not expect you to. If you find yourself having spent an hour working on this and have not completed it, you may **stop working on the code and write some notes on what you were trying to accomplish in the hour and what you would have liked to do next.** We will not evaluate how much you accomplished, but would like to understand what your thought process was and what you spent that time working on.
+### Step 4 Cleanup
 
-## Current code
+- **Motivation**: Smaller and DRYer components make devs happy!
+- Used ES6 destructuring wherever possible.
+- Removed Profile constructor method. No more need for ref. No more need for binding (since methods are now bound with arrow notation).
+- Removed defaultProps, since profile default is now loaded from the MobX store if not passed in.
+- Created `ControlledInput` and `ControlledSelect` components to DRY up "dynamic" className logic.
 
-The initial state of this project presents you with two forms which use a common `profile.js` component. One of the forms is blank, representing a 'New profile' state, and the other is prefilled with data, representing an 'Edit profile' state.
 
-All form fields are required, and submitting with any blank fields will result in a red message at the bottom of the form as well as a red border around the respective field. The message and red border will not disappear until you have filled in the required data and clicked submit again. If you have filled in all required data and submitted successfully, you will see a "Form submitted!" message, and the console will log the form's payload.
+## Future Steps:
 
-## Task
+- More DRY code. eg. move label into Input components? Not sure if that is good practice
+- Include mobx store in Profile.propTypes?
+- Toggling classNames to affect the styles (of inputs, feedback message) seems messy. Explore more solutions to dynamic styling. CSS-in-JS solutions?
+- Form inputs seems laggy. Debounce `handleInputChange`?
+- Should validation happen on input change?
+- Write out test cases: 
 
-We are giving you three primary tasks:
-1. Use only controlled inputs for the profile form
-2. Separate the profile render function into new components where it makes sense
-3. Document what you completed along with what you were planning on doing next in a separate markdown file.
-
-Below are some helpful notes:
-
-* After converting the form to use only controlled components, there should be no usage of refs remaining in the code.
-* When DRYing up the render method of `profile.js` into clean reusable components, prefer pure components to stateful ones.
-* Ideally the presence validation would be reused for all form fields.
-* When documenting what you did and what you'd do next, try to write the reasons for your choices so that we can follow your thought process.
-* Using only controlled inputs for the profile form will require you to move the form state from the DOM to the profile form.
-* If you are able to complete everything in one hour, running your code should be functionally identical to the original project.
+1. (test New profile and Edit Profile) Submitting non-empty fields should result in no style changes inputs, and "Form Submitted!" message
+2. (test New profile and Edit Profile) Submitting unfilled form should result error (red) message and red borders around the corresponding empty input fields
+3. Test Mobx Store: Test that inputs to New profile produce expected changes to profile in FormStore. Test that Edit profile produces expected values in profile in FormStore
